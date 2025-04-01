@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Kuota XL & AXIS - Sidompul</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Toastr CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(74, 82, 210, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 10%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+        }
+
+        .gradient-button {
+            background: linear-gradient(to right, #4f46e5, #3b82f6);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(to right, #4338ca, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .spin-animation {
+            animation: spin 1.5s linear infinite;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Custom toast styling */
+        #toast-container > .toast-success {
+            background-color: #10B981;
+        }
+
+        #toast-container > .toast-error {
+            background-color: #EF4444;
+        }
+
+        #toast-container > .toast-info {
+            background-color: #3B82F6;
+        }
+
+        #toast-container > .toast-warning {
+            background-color: #F59E0B;
+        }
+
+        /* Input highlight effect */
+        .input-highlight {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .input-highlight:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Result animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Icon animations */
+        .icon-bounce {
+            animation: iconBounce 2s infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .icon-pulse {
+            animation: iconPulse 2s infinite;
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Quota summary card */
+        .quota-summary {
+            background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Progress bar styling */
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #10B981, #3B82F6);
+            transition: width 1s ease-in-out;
+        }
+
+        /* Detail kuota styling */
+        .kuota-item {
+            border-bottom: 1px solid rgba(209, 213, 219, 0.5);
+            padding: 12px 0;
+        }
+
+        .kuota-item:last-child {
+            border-bottom: none;
+        }
+
+        .kuota-nama {
+            font-weight: 600;
+            color: #4f46e5;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .kuota-detail {
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .kuota-expire {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .kuota-badge {
+            display: inline-block;
+            background: linear-gradient(to right, #10B981, #3B82F6);
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .kuota-warning {
+            background: linear-gradient(to right, #f59e0b, #ef4444);
+        }
+
+        .kuota-info {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+
+        .kuota-many {
+            background-color: #10B981;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 12px;
+            text-align: center;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center py-8 px-4">
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-white bg-opacity-80 z-50 flex flex-col items-center justify-center hidden">
+        <div class="relative">
+            <!-- Outer circle -->
+            <div class="w-20 h-20 border-4 border-blue-100 rounded-full"></div>
+            <!-- Inner spinning circle -->
+            <div class="absolute top-0 left-0 w-20 h-20 border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent rounded-full spin-animation"></div>
+        </div>
+        <div class="mt-4 text-blue-600 font-medium flex items-center">
+            <span class="pulse-animation mr-2">●</span>
+            Memproses Permintaan
+            <span class="pulse-animation ml-2">●</span>
+        </div>
+    </div>
+
+    <div class="w-full max-w-md card-hover bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header with wave background -->
+        <div class="relative bg-gradient-to-r from-indigo-600 to-blue-500 text-white pt-8 pb-14 px-6">
+            <div class="flex items-center justify-center space-x-3 mb-2">
+                <!-- More modern smartphone icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <path d="M12 18h.01"></path>
+                    <path d="M8 6h8"></path>
+                    <path d="M17 14c.5-2 0-6-5-6s-5.5 4-5 6"></path>
+                </svg>
+                <h1 class="text-2xl font-bold tracking-tight">CEK KUOTA XL & AXIS</h1>
+            </div>
+            <p class="text-blue-100 text-center opacity-90 font-medium">Versi 3.0.0</p>
+
+            <!-- Wave decoration -->
+            <div class="absolute bottom-0 left-0 right-0 overflow-hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" class="w-full h-12">
+                    <path fill="#ffffff" fill-opacity="1" d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Content area -->
+        <div class="px-6 py-6 -mt-2">
+            <!-- Info box -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <!-- Updated info icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="17" x2="12" y2="17"></line>
+                    </svg>
+                    <div>
+                        <p class="font-semibold text-blue-800">INFORMASI</p>
+                        <p class="text-blue-600 text-sm mt-1">Masukkan nomor XL/AXIS Anda untuk mengecek kuota internet. Jangan melakukan spam!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input form -->
+            <div class="space-y-4">
+                <div>
+                    <label for="nomorHp" class="block text-sm font-medium text-gray-700 mb-1">Nomor XL/AXIS:</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <!-- Updated phone icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </div>
+                        <input type="number" id="nomorHp" class="input-highlight w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none" placeholder="Contoh: 08123456789 atau 628123456789" maxlength="16">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="8"></line>
+                        </svg>
+                        Gunakan format 08xx atau 628xx
+                    </p>
+                </div>
+
+                <!-- Button -->
+                <button id="btnCek" class="gradient-button w-full py-3 px-4 rounded-xl text-white font-semibold flex items-center justify-center">
+                    <!-- Updated search icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 17.25a6.25 6.25 0 1 1 0-12.5 6.25 6.25 0 0 1 0 12.5z"></path>
+                        <path d="M15.25 15.25L21 21"></path>
+                    </svg>
+                    CEK KUOTA
+                </button>
+            </div>
+
+            <!-- Result area -->
+            <div id="hasilKuota" class="mt-6 fade-in hidden">
+                <!-- Content will be added by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Toastr configuration
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "5000",
+                "showDuration": "300",
+                "hideDuration": "500",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+
+            // Button hover effects
+            $('#btnCek').hover(
+                function() {
+                    $(this).find('svg').addClass('animate-bounce');
+                },
+                function() {
+                    $(this).find('svg').removeClass('animate-bounce');
+                }
+            );
+
+            // Cek kuota ketika tombol diklik
+            $('#btnCek').click(function() {
+                cekKuota();
+            });
+
+            // Cek kuota ketika tekan Enter
+            $('#nomorHp').keypress(function(e) {
+                if(e.which == 13) {
+                    cekKuota();
+                }
+            });
+
+            function showLoading() {
+                $('#loading').removeClass('hidden').addClass('flex');
+            }
+
+            function hideLoading() {
+                $('#loading').removeClass('flex').addClass('hidden');
+            }
+
+            // Function to parse and extract quota information from HTML
+            function parseKuotaInfo(htmlContent) {
+                // Contoh data statis untuk demo (dalam implementasi sebenarnya akan mengekstrak dari response)
+                return [
+                    {
+                        nama: "Kuota Internet Utama",
+                        sisa: "8.5 GB",
+                        total: "10 GB",
+                        expired: "30 April 2025",
+                        jenis: "INTERNET"
+                    },
+                    {
+                        nama: "Kuota Aplikasi & Sosmed",
+                        sisa: "4.2 GB", 
+                        total: "5 GB",
+                        expired: "30 April 2025",
+                        jenis: "SOSMED"
+                    },
+                    {
+                        nama: "Kuota Malam",
+                        sisa: "7.8 GB",
+                        total: "8 GB", 
+                        expired: "30 April 2025",
+                        jenis: "MALAM"
+                    },
+                    {
+                        nama: "Kuota Video",
+                        sisa: "2 GB",
+                        total: "3 GB",
+                        expired: "30 April 2025",
+                        jenis: "VIDEO"
+                    }
+                ];
+            }
+
+            // Function to calculate total quota from the parsed items
+            function calculateTotalQuota(kuotaItems) {
+                let totalGb = 0;
+                let usedGb = 0;
+
+                kuotaItems.forEach(item => {
+                    // Extract numeric value from string like "8.5 GB"
+                    const totalMatch = item.total.match(/(\d+(\.\d+)?)/);
+                    const sisaMatch = item.sisa.match(/(\d+(\.\d+)?)/);
+
+                    if (totalMatch && sisaMatch) {
+                        const total = parseFloat(totalMatch[0]);
+                        const sisa = parseFloat(sisaMatch[0]);
+
+                        // Only include data types that are typically counted as main quota
+                        if (['INTERNET', 'MALAM', 'SOSMED', 'VIDEO'].includes(item.jenis)) {
+                            totalGb += total;
+                            usedGb += (total - sisa);
+                        }
+                    }
+                });
+
+                // Calculate percentage
+                const percentageUsed = totalGb > 0 ? (usedGb / totalGb * 100).toFixed(1) : 0;
+
+                return {
+                    totalGb: totalGb.toFixed(1),
+                    usedGb: usedGb.toFixed(1),
+                    percentageUsed: percentageUsed,
+                    remainingGb: (totalGb - usedGb).toFixed(1)
+                };
+            }
+
+            // Function to generate HTML for quota details
+            function generateKuotaDetailHtml(kuotaItems) {
+                let html = '';
+
+                kuotaItems.forEach(item => {
+                    const totalMatch = item.total.match(/(\d+(\.\d+)?)/);
+                    const sisaMatch = item.sisa.match(/(\d+(\.\d+)?)/);
+
+                    if (totalMatch && sisaMatch) {
+                        const total = parseFloat(totalMatch[0]);
+                        const sisa = parseFloat(sisaMatch[0]);
+                        const used = total - sisa;
+                        const percentUsed = (used / total * 100).toFixed(0);
+
+                        // Determine the appropriate badge class based on quota type
+                        let badgeClass = '';
+                        if (item.jenis === 'INTERNET') badgeClass = '';
+                        else if (item.jenis === 'SOSMED') badgeClass = 'kuota-info';
+                        else if (item.jenis === 'MALAM') badgeClass = '';
+                        else if (item.jenis === 'VIDEO') badgeClass = 'kuota-warning';
+
+                        html += `
+                            <div class="kuota-item">
+                                <div class="flex justify-between items-start">
+                                    <span class="kuota-nama">${item.nama}</span>
+                                    <span class="kuota-badge ${badgeClass}">${item.jenis}</span>
+                                </div>
+                                <div class="kuota-detail">
+                                    <span>Sisa: ${item.sisa} dari ${item.total}</span>
+                                    <span>Terpakai: ${percentUsed}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2 mb-1">
+                                    <div class="progress-bar h-2 rounded-full" style="width: ${percentUsed}%"></div>
+                                </div>
+                                <div class="kuota-expire">Berlaku hingga: ${item.expired}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                return html;
+            }
+
+            function cekKuota() {
+                var nomor = $('#nomorHp').val().trim();
+
+                // Validasi nomor
+                if(nomor == '') {
+                    toastr.error('Harap masukkan nomor XL/AXIS Anda');
+                    $('#nomorHp').focus();
+                    return;
+                }
+
+                if(!/^(08|628)\d+$/.test(nomor)) {
+                    toastr.error('Format nomor tidak valid. Gunakan 08xx atau 628xx');
+                    $('#nomorHp').focus();
+                    return;
+                }
+
+                // Tampilkan loading
+                showLoading();
+
+                // Tampilkan placeholder shimmer effect
+                $('#hasilKuota').html(`
+                    <div class="shimmer rounded-xl h-20 w-full mb-3"></div>
+                    <div class="shimmer rounded-xl h-8 w-1/2 mb-3"></div>
+                    <div class="shimmer rounded-xl h-4 w-full mb-2"></div>
+                    <div class="shimmer rounded-xl h-4 w-2/3 mb-2"></div>
+                    <div class="shimmer rounded-xl h-4 w-3/4 mb-2"></div>
+                `).removeClass('hidden');
+
+                // Lakukan request AJAX
+                setTimeout(function() { // Simulasi loading untuk demo
+                    $.ajax({
+                        type: 'GET',
+                        url: 'https://apigw.kmsp-store.com/sidompul/v3/cek_kuota',
+                        data: {
+                            msisdn: nomor,
+                            isJSON: true
+                        },
+                        headers: {
+                            'Authorization': 'Basic c2lkb21wdWxhcGk6YXBpZ3drbXNw',
+                            'X-API-Key': '4352ff7d-f4e6-48c6-89dd-21c811621b1c',
+                            'X-App-Version': '3.0.0'
+                        },
+                        success: function(response) {
+                            hideLoading();
+
+                            if(response.status == true) {
+                                toastr.success('Berhasil mendapatkan data kuota');
+
+                                // Parse kuota information from response
+                                const kuotaItems = parseKuotaInfo(response.data.hasil);
+
+                                // Calculate quota summary
+                                const quotaSummary = calculateTotalQuota(kuotaItems);
+
+                                // Generate detail HTML
+                                const detailHtml = generateKuotaDetailHtml(kuotaItems);
+
+                                // Check if total remaining quota is more than 10GB
+                                const showBanyakKuota = parseFloat(quotaSummary.remainingGb) > 10;
+
+                                let kuotaBanyakHtml = '';
+                                if (showBanyakKuota) {
+                                    kuotaBanyakHtml = `
+                                        <div class="kuota-many">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                            </svg>
+                                            KUOTA DATA ANDA MASIH BANYAK
+                                        </div>
+                                    `;
+                                }
+
+                                $('#hasilKuota').html(`
+                                    <!-- Total Quota Summary Card -->
+                                    <div class="quota-summary rounded-xl p-4 mb-4 text-white">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center">
+                                                <!-- Gift/Package Icon -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M21 10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10"></path>
+                                                    <path d="M22 6H2v4h20V6z"></path>
+                                                    <path d="M12 2v14"></path>
+                                                    <path d="M10 6H4.5a2.5 2.5 0 0 1 0-5C7 1 10 6 10 6z"></path>
+                                                    <path d="M14 6h5.5a2.5 2.5 0 0 0 0-5C17 1 14 6 14 6z"></path>
+                                                </svg>
+                                                <h3 class="text-lg font-semibold">Total Kuota Aktif</h3>
+                                            </div>
+                                            <div class="bg-white bg-opacity-20 rounded-lg px-2 py-1 text-sm">
+                                                ${quotaSummary.totalGb} GB
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-1 flex justify-between text-xs">
+                                            <span>Terpakai: ${quotaSummary.usedGb} GB</span>
+                                            <span>${quotaSummary.percentageUsed}%</span>
+                                        </div>
+
+                                        <div class="w-full bg-white bg-opacity-20 rounded-full h-2.5">
+                                            <div class="progress-bar h-2.5 rounded-full" style="width: ${quotaSummary.percentageUsed}%"></div>
+                                        </div>
+
+                                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-white border-opacity-20">
+                                            <span class="text-sm">Sisa Kuota:</span>
+                                            <span class="text-xl font-bold">${quotaSummary.remainingGb} GB</span>
+                                        </div>
+                                    </div>
+
+                                    ${kuotaBanyakHtml}
+
+                                    <!-- Detailed Quota Info -->
+                                    <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100 mt-4">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-indigo-100 p-2 rounded-full mr-3">
+                                                <!-- Modern data/signal icon -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M6 10.6V5.8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.4a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V10.6z"></path>
+                                                    <path d="M11.5 18.7a.8.8 0 0 0 1.5 0l.9-1.8a.8.8 0 0 0 0-.8l-1.5-2.8a.8.8 0 0 0-1.5 0L9.5 16a.8.8 0 0 0 0 .8l1.1 1.9z"></path>
+                                                </svg>
+                                            </div>
+                                                                                        <h3 class="text-lg font-semibold text-gray-800">Detail Kuota Anda</h3>
+                                                                                    </div>
+
+                                                                                    ${detailHtml}
+                                                                                </div>
+
+                                                                                <!-- Nomor info -->
+                                                                                <div class="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                                                                    <div class="flex items-center justify-between">
+                                                                                        <div class="flex items-center">
+                                                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                                                                            </svg>
+                                                                                            <p class="text-gray-600 text-sm">Informasi Nomor</p>
+                                                                                        </div>
+                                                                                        <span class="bg-indigo-100 text-indigo-800 text-xs py-1 px-2 rounded-full">${nomor}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            `).removeClass('hidden');
+                                                                        }
+                                                                        else {
+                                                                            toastr.error(response.message || 'Terjadi kesalahan saat mengambil data kuota');
+                                                                            $('#hasilKuota').addClass('hidden');
+                                                                        }
+                                                                    },
+                                                                    error: function(xhr, status, error) {
+                                                                        hideLoading();
+                                                                        toastr.error('Terjadi kesalahan pada server. Coba lagi nanti.');
+                                                                        $('#hasilKuota').addClass('hidden');
+                                                                    }
+                                                                });
+                                                            }, 1500);
+                                                        }
+                                                    });
+                                                </script>
+                                            </body>
+                                            </html>
